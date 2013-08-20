@@ -42,10 +42,9 @@ class Command(BaseCommand):
                 name=default_db['NAME'],
             )
         else:
-            print engine
             raise CommandError(
                 'Could not get database engine. '
-                'Only sqlite and postgres are supported.')
+                'Only sqlite, oracle and postgres are supported.')
 
         cmd = [
             "mariposa",
