@@ -9,7 +9,7 @@ class Command(BaseCommand):
     args = ''
     help = 'run mariposa migrate based on your settings'
     option_list = BaseCommand.option_list + (
-        make_option('--dry-run',
+        make_option('-n', '--dry-run',
                     action='store_true',
                     dest='dry-run',
                     default=False,
@@ -17,12 +17,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # d for MARIPOSA_DIRECTORY
         d = getattr(settings, "MARIPOSA_DIRECTORY")
         if not d:
             raise CommandError('settings must specify MARIPOSA_DIRECTORY')
 
         default_db = settings.DATABASES['default']
         engine = default_db['ENGINE']
+        # e for engine
+        # c for connection string
         if 'postgres' in engine:
             e = 'postgres'
             c = ('{{"host":"{HOST}","port":"{PORT}","user":"{USER}",'
@@ -31,7 +34,15 @@ class Command(BaseCommand):
         elif 'sqlite' in engine:
             e = 'sqlite'
             c = default_db['NAME']
+        elif 'oracle' in engine:
+            e = 'oracle'
+            c = "{user}/{password}@{name}".format(
+                user=default_db['USER'],
+                password=default_db['PASSWORD'],
+                name=default_db['NAME'],
+            )
         else:
+            print engine
             raise CommandError(
                 'Could not get database engine. '
                 'Only sqlite and postgres are supported.')
@@ -42,6 +53,7 @@ class Command(BaseCommand):
             "-c", '%s' % c,
             "-d", '%s' % d,
             "-e", e,
+            "-x",  # don't create dbmigration table automatically
         ]
         if options['dry-run']:
             cmd.append('--dry-run')
